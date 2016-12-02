@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p> Lokalizacja: {{ name|title }} </p>
+<p> Szerokość geograficzna: {{ lat }} </p>
+<p> Długość geograficzna: {{ lng }} </p>
+<p> URL: {{ url }} </p>
+<p> Dane meteo: {{ data }} </p>
+<p> Dane opadowe 6-cio godzinne: {{ data1 }} </p>
+<p> Dane opadowe 3 godzinne: {{ data2 }} </p>
+
+
+{% endblock content %}
+
