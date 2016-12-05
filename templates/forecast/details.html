@@ -13,10 +13,16 @@
 <p> Opad: {{ current_precipitation }} </p>
 <p> Zachmurzenie: {{ current_cloudiness }} </p>
 
-<img src="{% static 'forecast/temperature_plot.png' %}" alt="Wykres temperatury" />
-<img src="{% static 'forecast/pressure_plot.png' %}" alt="Wykres ciśnienia" />
-<img src="{% static 'forecast/humidity_plot.png' %}" alt="Wykres wilgotności"
-                                                     />
+<img src="{% static 'forecast/plots/temperature_plot.png' %}" alt="Wykres temperatury" />
+<img src="{% static 'forecast/plots/pressure_plot.png' %}" alt="Wykres ciśnienia" />
+<img src="{% static 'forecast/plots/humidity_plot.png' %}" alt="Wykres
+wilgotności" />
+<img src="{% static 'forecast/plots/precipitation_60_hours_plot.png' %}"
+alt="Wykres opadów (60 godzin)" />
+<img src="{% static 'forecast/plots/precipitation_9_days_plot.png' %}"
+alt="Wykres opadów (9 dni)" />
+
+
 
 
 <p> URL: {{ url }} </p>

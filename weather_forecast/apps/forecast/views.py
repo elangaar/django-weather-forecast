@@ -1,6 +1,7 @@
 from urllib.request import urlopen
 import re
 from datetime import datetime, timedelta
+import os
 
 
 from django.shortcuts import render, redirect
@@ -8,6 +9,7 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.text import slugify
 from django.contrib import messages
+from weather_forecast.settings import BASE_DIR
 
 from geopy.geocoders import Nominatim
 import xmltodict
@@ -18,8 +20,9 @@ from PIL import Image
 from .forms import SelectForm
 
 
-_FORECAST_URL = 'http://api.met.no/weatherapi/locationforecastlts/1.2/?'
-_DATE_TIME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}')
+FORECAST_URL = 'http://api.met.no/weatherapi/locationforecastlts/1.2/?'
+DATE_TIME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}')
+PLOT_PATH = os.path.join(BASE_DIR, 'static', 'forecast', 'plots')
 
 def select(request):
     if request.method == "POST":
@@ -62,12 +65,12 @@ def _get_meteo_parameters(time_from, time_to, data):
 def _get_precipitation_parameters(time_from, time_to, data):
     if time_to - time_from == timedelta(hours=3):
         precipitation_value = data['location']['precipitation']['@value']
-        precipitation_3_hours_values.append(time_from)
-        precipitation_3_hours_values.append(float(precipitation_value))
+        precipitation_record = (time_from, float(precipitation_value))
+        precipitation_3_hours_values.append(precipitation_record)
     if time_to - time_from == timedelta(hours=6):
         precipitation_value = data['location']['precipitation']['@value']
-        precipitation_6_hours_values.append(time_from)
-        precipitation_6_hours_values.append(float(precipitation_value))
+        precipitation_record = (time_from, float(precipitation_value))
+        precipitation_6_hours_values.append(precipitation_record)
 
 
 def _get_data(url):
@@ -80,8 +83,8 @@ def _get_data(url):
     precipitation_parameters = []
 
     for period in periodic_data:
-        time_from_raw = _DATE_TIME_REGEX.match(period['@from']).group()
-        time_to_raw = _DATE_TIME_REGEX.match(period['@to']).group()
+        time_from_raw = DATE_TIME_REGEX.match(period['@from']).group()
+        time_to_raw = DATE_TIME_REGEX.match(period['@to']).group()
         time_from = datetime.strptime(time_from_raw, '%Y-%m-%dT%H:%M')
         time_to = datetime.strptime(time_to_raw, '%Y-%m-%dT%H:%M')
         try:
@@ -106,7 +109,7 @@ def _create_temperature_plot(values):
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
 
-    plt.savefig('/home/elangaar/projekty/weather_forecast_env/static/forecast/temperature_plot.png')
+    plt.savefig(os.path.join(PLOT_PATH, 'temperature_plot.png'))
     plt.close('all')
 
 def _create_pressure_plot(values):
@@ -120,7 +123,7 @@ def _create_pressure_plot(values):
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
 
-    plt.savefig('/home/elangaar/projekty/weather_forecast_env/static/forecast/pressure_plot.png')
+    plt.savefig(os.path.join(PLOT_PATH, 'pressure_plot.png'))
     plt.close('all')
 
 def _create_humidity_plot(values):
@@ -134,8 +137,35 @@ def _create_humidity_plot(values):
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
 
-    plt.savefig('/home/elangaar/projekty/weather_forecast_env/static/forecast/humidity_plot.png')
+    plt.savefig(os.path.join(PLOT_PATH, 'humidity_plot.png'))
     plt.close('all')
+
+def _create_precipitation_60_hours_plot(values):
+    times = [time[0] for time in values]
+    values = [value[1] for value in values]
+    plt.bar(times, values, width=0.125, alpha=1.0, color=['grey'])
+    plt.title("Wysokość opadu (prognoza na 60 godzin)", fontsize=11)
+    plt.ylabel("[mm]")
+    plt.grid(True, linestyle="-", linewidth="0.2")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.gca().xaxis.set_minor_locator(mdates.HourLocator(interval=6))
+    plt.gcf().autofmt_xdate()
+    plt.savefig(os.path.join(PLOT_PATH, 'precipitation_60_hours_plot.png'))
+    plt.close()
+
+def _create_precipitation_9_days_plot(values):
+    times = [time[0] for time in values]
+    values = [value[1] for value in values]
+    plt.bar(times, values, width=0.125, alpha=1.0, color=['grey'])
+    plt.title("Wysokość opadu (prognoza na 9 dni)", fontsize=11)
+    plt.ylabel("[mm]")
+    plt.grid(True, linestyle="-", linewidth="0.2")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.gcf().autofmt_xdate()
+    plt.savefig(os.path.join(PLOT_PATH, 'precipitation_9_days_plot.png'))
+    plt.close()
 
 def forecast_details(request, slug):
     request.session.modified = True
@@ -145,7 +175,7 @@ def forecast_details(request, slug):
     except AttributeError:
         messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
         return redirect(reverse('select'))
-    url = _get_url(_FORECAST_URL, location[0], location[1])
+    url = _get_url(FORECAST_URL, location[0], location[1])
     meteo_parameters = _get_data(url)[0]
     precipitation_parameters = _get_data(url)[1]
 
@@ -159,6 +189,8 @@ def forecast_details(request, slug):
     _create_temperature_plot(meteo_parameters)
     _create_pressure_plot(meteo_parameters)
     _create_humidity_plot(meteo_parameters)
+    _create_precipitation_60_hours_plot(precipitation_3_hours_values)
+    _create_precipitation_9_days_plot(precipitation_6_hours_values)
 
     context = {
         'name': name,
