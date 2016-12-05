@@ -2,3 +2,4 @@
 *.pyc
 *.swo
 *db.sqlite3
+*.png
