@@ -16,6 +16,9 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from weather_forecast import settings
+from django.conf.urls.static import static
+
 from weather_forecast.apps.forecast.views import select, forecast_details
 
 urlpatterns = [
@@ -23,3 +26,7 @@ urlpatterns = [
     url(r'^$', select, name='select'),
     url(r'^(?P<slug>[\w-]+)/$', forecast_details, name='forecast-details'),
 ]
+
+if settings.DEBUG == True:
+    urlpatterns += static(settings.STATIC_URL,
+                          document_root=settings.STATIC_ROOT)

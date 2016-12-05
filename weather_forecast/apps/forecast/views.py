@@ -11,6 +11,9 @@ from django.contrib import messages
 
 from geopy.geocoders import Nominatim
 import xmltodict
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from PIL import Image
 
 from .forms import SelectForm
 
@@ -92,6 +95,48 @@ def _get_data(url):
 
     return (meteo_parameters, precipitation_parameters)
 
+def _create_temperature_plot(values):
+    times = [time[0] for time in values]
+    values = [value[2] for value in values]
+    plt.plot(times, values, 'r-')
+    plt.title("Temperatura", fontsize=11)
+    plt.ylabel("[C]")
+    plt.grid(True, linestyle="-", linewidth="0.2")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig('/home/elangaar/projekty/weather_forecast_env/static/forecast/temperature_plot.png')
+    plt.close('all')
+
+def _create_pressure_plot(values):
+    times = [time[0] for time in values]
+    values = [value[3] for value in values]
+    plt.plot(times, values, 'g-')
+    plt.title("Ciśnienie", fontsize=11)
+    plt.ylabel("[hPa]")
+    plt.grid(True, linestyle="-", linewidth="0.2")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig('/home/elangaar/projekty/weather_forecast_env/static/forecast/pressure_plot.png')
+    plt.close('all')
+
+def _create_humidity_plot(values):
+    times = [time[0] for time in values]
+    values = [value[4] for value in values]
+    plt.plot(times, values, 'b-')
+    plt.title("Wilgotność", fontsize=11)
+    plt.ylabel("[%]")
+    plt.grid(True, linestyle="-", linewidth="0.2")
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
+    plt.gcf().autofmt_xdate()
+
+    plt.savefig('/home/elangaar/projekty/weather_forecast_env/static/forecast/humidity_plot.png')
+    plt.close('all')
+
 def forecast_details(request, slug):
     request.session.modified = True
     name = request.session.pop('name')
@@ -101,13 +146,30 @@ def forecast_details(request, slug):
         messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
         return redirect(reverse('select'))
     url = _get_url(_FORECAST_URL, location[0], location[1])
-    data = _get_data(url)
     meteo_parameters = _get_data(url)[0]
     precipitation_parameters = _get_data(url)[1]
+
+    current_time = meteo_parameters[0][0]
+    current_temperature = meteo_parameters[0][2]
+    current_pressure = meteo_parameters[0][3]
+    current_humidity = meteo_parameters[0][4]
+    current_precipitation = precipitation_6_hours_values[1]
+    current_cloudiness = meteo_parameters[0][5]
+
+    _create_temperature_plot(meteo_parameters)
+    _create_pressure_plot(meteo_parameters)
+    _create_humidity_plot(meteo_parameters)
+
     context = {
         'name': name,
         'lat': location[0],
         'lng': location[1],
+        'current_time': current_time,
+        'current_temperature': current_temperature,
+        'current_pressure': current_pressure,
+        'current_humidity': current_humidity,
+        'current_precipitation': current_precipitation,
+        'current_cloudiness': current_cloudiness,
         'url': url,
         'data': meteo_parameters,
         'data1': precipitation_6_hours_values,

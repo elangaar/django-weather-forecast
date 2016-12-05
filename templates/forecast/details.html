@@ -1,10 +1,24 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 
 <p> Lokalizacja: {{ name|title }} </p>
 <p> Szerokość geograficzna: {{ lat }} </p>
 <p> Długość geograficzna: {{ lng }} </p>
+<p> Stan na: {{ current_time }} </p>
+<p> Temperatura: {{ current_temperature }} </p>
+<p> Ciśnienie: {{ current_pressure }} </p>
+<p> Wilgotność: {{ current_humidity }} </p>
+<p> Opad: {{ current_precipitation }} </p>
+<p> Zachmurzenie: {{ current_cloudiness }} </p>
+
+<img src="{% static 'forecast/temperature_plot.png' %}" alt="Wykres temperatury" />
+<img src="{% static 'forecast/pressure_plot.png' %}" alt="Wykres ciśnienia" />
+<img src="{% static 'forecast/humidity_plot.png' %}" alt="Wykres wilgotności"
+                                                     />
+
+
 <p> URL: {{ url }} </p>
 <p> Dane meteo: {{ data }} </p>
 <p> Dane opadowe 6-cio godzinne: {{ data1 }} </p>
