@@ -9,7 +9,8 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.text import slugify
 from django.contrib import messages
-from weather_forecast.settings import BASE_DIR
+from django.template.loader import render_to_string
+
 
 from geopy.geocoders import Nominatim
 import xmltodict
@@ -18,6 +19,9 @@ import matplotlib.dates as mdates
 from PIL import Image
 
 from .forms import SelectForm
+from weather_forecast.settings import BASE_DIR
+from weather_forecast.apps.forecast.models import Waypoint
+
 
 
 FORECAST_URL = 'http://api.met.no/weatherapi/locationforecastlts/1.2/?'
@@ -110,7 +114,6 @@ def _create_temperature_plot(values):
     plt.gcf().autofmt_xdate()
 
     plt.savefig(os.path.join(PLOT_PATH, 'temperature_plot.png'))
-    plt.close('all')
 
 def _create_pressure_plot(values):
     times = [time[0] for time in values]
@@ -124,7 +127,6 @@ def _create_pressure_plot(values):
     plt.gcf().autofmt_xdate()
 
     plt.savefig(os.path.join(PLOT_PATH, 'pressure_plot.png'))
-    plt.close('all')
 
 def _create_humidity_plot(values):
     times = [time[0] for time in values]
@@ -138,7 +140,6 @@ def _create_humidity_plot(values):
     plt.gcf().autofmt_xdate()
 
     plt.savefig(os.path.join(PLOT_PATH, 'humidity_plot.png'))
-    plt.close('all')
 
 def _create_precipitation_60_hours_plot(values):
     times = [time[0] for time in values]
@@ -152,7 +153,6 @@ def _create_precipitation_60_hours_plot(values):
     plt.gca().xaxis.set_minor_locator(mdates.HourLocator(interval=6))
     plt.gcf().autofmt_xdate()
     plt.savefig(os.path.join(PLOT_PATH, 'precipitation_60_hours_plot.png'))
-    plt.close()
 
 def _create_precipitation_9_days_plot(values):
     times = [time[0] for time in values]
@@ -165,17 +165,20 @@ def _create_precipitation_9_days_plot(values):
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
     plt.savefig(os.path.join(PLOT_PATH, 'precipitation_9_days_plot.png'))
-    plt.close()
 
 def forecast_details(request, slug):
     request.session.modified = True
-    name = request.session.pop('name')
+    name = request.session.pop('name').capitalize()
     try:
         location = _coordinates(name)
     except AttributeError:
         messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
         return redirect(reverse('select'))
-    url = _get_url(FORECAST_URL, location[0], location[1])
+
+    lat = location[0]
+    lng = location[1]
+
+    url = _get_url(FORECAST_URL, lat, lng)
     meteo_parameters = _get_data(url)[0]
     precipitation_parameters = _get_data(url)[1]
 
@@ -192,10 +195,16 @@ def forecast_details(request, slug):
     _create_precipitation_60_hours_plot(precipitation_3_hours_values)
     _create_precipitation_9_days_plot(precipitation_6_hours_values)
 
+    Lat = str(lat).replace(',', '.')
+    Lng = str(lng).replace(',', '.')
+    waypoints = Waypoint.objects.create(name=name, geometry='POINT({}\
+                                       {})'.format(Lat, Lng)).save()
     context = {
         'name': name,
-        'lat': location[0],
-        'lng': location[1],
+        'lat': lat,
+        'lng': lng,
+        'Lat': Lat,
+        'Lng': Lng,
         'current_time': current_time,
         'current_temperature': current_temperature,
         'current_pressure': current_pressure,
@@ -206,5 +215,8 @@ def forecast_details(request, slug):
         'data': meteo_parameters,
         'data1': precipitation_6_hours_values,
         'data2': precipitation_3_hours_values,
+        'content': render_to_string("forecast/waypoints.html", {'waypoints':
+                                                                waypoints})
+
     }
     return render(request, "forecast/details.html", context)
