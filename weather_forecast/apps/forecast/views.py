@@ -14,6 +14,8 @@ from django.template.loader import render_to_string
 
 from geopy.geocoders import Nominatim
 import xmltodict
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from PIL import Image
@@ -48,7 +50,9 @@ def select(request):
 def _coordinates(name):
     geolocator = Nominatim()
     location = geolocator.geocode(name)
-    return (location.latitude, location.longitude)
+    print(location)
+    country = location[0].split(', ')[-1]
+    return (location.latitude, location.longitude, country)
 
 def _get_url(url, lat, lng):
     return url + 'lat=%s;lon=%s' % (lat, lng)
@@ -102,9 +106,24 @@ def _get_data(url):
 
     return (meteo_parameters, precipitation_parameters)
 
+def _create_plots(meteo_values, precipitation_3_hours_values,
+                  precipitation_6_hours_values):
+    fig = plt.figure()
+    fig.set_figheight(10)
+    fig.subplots_adjust(hspace=0.5)
+    matplotlib.rcParams.update({'font.size': 10})
+    _create_temperature_plot(meteo_values)
+    _create_pressure_plot(meteo_values)
+    _create_humidity_plot(meteo_values)
+    _create_precipitation_60_hours_plot(precipitation_3_hours_values)
+    _create_precipitation_9_days_plot(precipitation_6_hours_values)
+    return fig.savefig(os.path.join(PLOT_PATH, 'plot.png'))
+
+
 def _create_temperature_plot(values):
     times = [time[0] for time in values]
     values = [value[2] for value in values]
+    plt.subplot(511)
     plt.plot(times, values, 'r-')
     plt.title("Temperatura", fontsize=11)
     plt.ylabel("[C]")
@@ -112,25 +131,28 @@ def _create_temperature_plot(values):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
-
-    plt.savefig(os.path.join(PLOT_PATH, 'temperature_plot.png'))
+    return plt
 
 def _create_pressure_plot(values):
     times = [time[0] for time in values]
     values = [value[3] for value in values]
+    plt.subplot(512)
     plt.plot(times, values, 'g-')
     plt.title("Ciśnienie", fontsize=11)
     plt.ylabel("[hPa]")
+    plt.xlabel('')
     plt.grid(True, linestyle="-", linewidth="0.2")
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(PLOT_PATH, 'pressure_plot.png'))
+    return plt
 
 def _create_humidity_plot(values):
     times = [time[0] for time in values]
     values = [value[4] for value in values]
+    plt.subplot(513)
+    plt.xticks()
     plt.plot(times, values, 'b-')
     plt.title("Wilgotność", fontsize=11)
     plt.ylabel("[%]")
@@ -139,24 +161,25 @@ def _create_humidity_plot(values):
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
 
-    plt.savefig(os.path.join(PLOT_PATH, 'humidity_plot.png'))
+    return plt
 
 def _create_precipitation_60_hours_plot(values):
     times = [time[0] for time in values]
     values = [value[1] for value in values]
+    plt.subplot(514)
     plt.bar(times, values, width=0.125, alpha=1.0, color=['grey'])
     plt.title("Wysokość opadu (prognoza na 60 godzin)", fontsize=11)
     plt.ylabel("[mm]")
     plt.grid(True, linestyle="-", linewidth="0.2")
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.gca().xaxis.set_minor_locator(mdates.HourLocator(interval=6))
     plt.gcf().autofmt_xdate()
-    plt.savefig(os.path.join(PLOT_PATH, 'precipitation_60_hours_plot.png'))
+    return plt
 
 def _create_precipitation_9_days_plot(values):
     times = [time[0] for time in values]
     values = [value[1] for value in values]
+    plt.subplot(515)
     plt.bar(times, values, width=0.125, alpha=1.0, color=['grey'])
     plt.title("Wysokość opadu (prognoza na 9 dni)", fontsize=11)
     plt.ylabel("[mm]")
@@ -164,7 +187,7 @@ def _create_precipitation_9_days_plot(values):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator())
     plt.gcf().autofmt_xdate()
-    plt.savefig(os.path.join(PLOT_PATH, 'precipitation_9_days_plot.png'))
+    return plt
 
 def forecast_details(request, slug):
     request.session.modified = True
@@ -177,6 +200,7 @@ def forecast_details(request, slug):
 
     lat = location[0]
     lng = location[1]
+    country = location[2]
 
     url = _get_url(FORECAST_URL, lat, lng)
     meteo_parameters = _get_data(url)[0]
@@ -189,11 +213,7 @@ def forecast_details(request, slug):
     current_precipitation = precipitation_6_hours_values[1]
     current_cloudiness = meteo_parameters[0][5]
 
-    _create_temperature_plot(meteo_parameters)
-    _create_pressure_plot(meteo_parameters)
-    _create_humidity_plot(meteo_parameters)
-    _create_precipitation_60_hours_plot(precipitation_3_hours_values)
-    _create_precipitation_9_days_plot(precipitation_6_hours_values)
+    _create_plots(meteo_parameters, precipitation_3_hours_values,precipitation_6_hours_values,)
 
     Lat = str(lat).replace(',', '.')
     Lng = str(lng).replace(',', '.')
@@ -205,6 +225,7 @@ def forecast_details(request, slug):
         'lng': lng,
         'Lat': Lat,
         'Lng': Lng,
+        'country': country,
         'current_time': current_time,
         'current_temperature': current_temperature,
         'current_pressure': current_pressure,

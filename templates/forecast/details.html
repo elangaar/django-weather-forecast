@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% block title %} {{ name }} ({{ country }}) {% endblock %}
 {% block head %}
 
 <meta name="viewport" content="initial-scale=1.0" />
@@ -35,19 +37,13 @@
     var map;
     function initMap() {
         map = new google.maps.Map(document.getElementById('map'), {
-            center: {lat: -34.397, lng: 150.644},
+            center: {lat: {{ Lat }}, lng: {{ Lng }} },
             zoom: 8
         });
     }
 </script>
-<img src="{% static 'forecast/plots/temperature_plot.png' %}" alt="Wykres temperatury" />
-<img src="{% static 'forecast/plots/pressure_plot.png' %}" alt="Wykres ciśnienia" />
-<img src="{% static 'forecast/plots/humidity_plot.png' %}" alt="Wykres
-wilgotności" />
-<img src="{% static 'forecast/plots/precipitation_60_hours_plot.png' %}"
-alt="Wykres opadów (60 godzin)" />
-<img src="{% static 'forecast/plots/precipitation_9_days_plot.png' %}"
-alt="Wykres opadów (9 dni)" />
+<img src="{% static 'forecast/plots/plot.png' %}" alt="Wykresy parametrów
+meteo i opadów" />
 
 
 
