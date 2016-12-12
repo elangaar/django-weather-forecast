@@ -15,10 +15,12 @@ from django.template.loader import render_to_string
 from geopy.geocoders import Nominatim
 import xmltodict
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from PIL import Image
+import json
 
 from .forms import SelectForm
 from weather_forecast.settings import BASE_DIR
@@ -189,6 +191,23 @@ def _create_precipitation_9_days_plot(values):
     plt.gcf().autofmt_xdate()
     return plt
 
+def get_time_of_day(lat, lng):
+    URL = 'http://api.sunrise-sunset.org/json'
+    url_sunrise_sunset_times = URL + "?lat=%s&lng=%s" % (lat, lng)
+    with urlopen(url_sunrise_sunset_times) as url:
+        data = url.read().decode('utf-8')
+    data_json = json.loads(data)
+    sunrise_str = str(data_json['results']['sunrise'])
+    sunset_str = str(data_json['results']['sunset'])
+
+    sunrise = datetime.strptime(sunrise_str, "%X %p")
+    sunset = datetime.strptime(sunset_str, "%X %p")
+
+    now = datetime.now()    # change to localtime
+    if sunrise < now < sunset:
+        return 'day'
+    return 'night'
+
 def forecast_details(request, slug):
     request.session.modified = True
     name = request.session.pop('name').capitalize()
@@ -210,21 +229,25 @@ def forecast_details(request, slug):
     current_temperature = meteo_parameters[0][2]
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
-    current_precipitation = precipitation_6_hours_values[1]
-    current_cloudiness = meteo_parameters[0][5]
+    current_precipitation = float(precipitation_6_hours_values[0][1])
+    current_cloudiness = float(meteo_parameters[0][5])
 
+    time_of_day = get_time_of_day(lat, lng)
     _create_plots(meteo_parameters, precipitation_3_hours_values,precipitation_6_hours_values,)
 
     Lat = str(lat).replace(',', '.')
     Lng = str(lng).replace(',', '.')
     waypoints = Waypoint.objects.create(name=name, geometry='POINT({}\
                                        {})'.format(Lat, Lng)).save()
+    pora = 'noc'
+
     context = {
         'name': name,
         'lat': lat,
         'lng': lng,
         'Lat': Lat,
         'Lng': Lng,
+        'time_of_day': time_of_day,
         'country': country,
         'current_time': current_time,
         'current_temperature': current_temperature,
