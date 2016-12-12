@@ -40,10 +40,8 @@ def select(request):
             if name == '':
                 messages.error(request, "Wprowadź nazwę miejscowości!")
                 return redirect(reverse('select'))
-            slug = slugify(name)
-            request.session['name'] = name
             return HttpResponseRedirect(
-                reverse('forecast-details', args=(slug, ))
+                reverse('forecast-details', args=(name, ))
             )
     else:
         form = SelectForm()
@@ -208,9 +206,7 @@ def get_time_of_day(lat, lng):
         return 'day'
     return 'night'
 
-def forecast_details(request, slug):
-    request.session.modified = True
-    name = request.session.pop('name').capitalize()
+def forecast_details(request, name):
     try:
         location = _coordinates(name)
     except AttributeError:

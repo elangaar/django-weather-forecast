@@ -26,7 +26,7 @@ from weather_forecast.apps.forecast.views import select, forecast_details
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', select, name='select'),
-    url(r'^(?P<slug>[\w-]+)/$', forecast_details, name='forecast-details'),
+    url(r'^(?P<name>[\w-]+)/$', forecast_details, name='forecast-details'),
     url(r'^map/waypoint/$', TemplateView.as_view(template_name='forecast/waypoints.html'),
         name='waypoints'),
 ]
