@@ -21,9 +21,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from PIL import Image
 import json
+from pytz import timezone
 
 from .forms import SelectForm
-from weather_forecast.settings import BASE_DIR
+from weather_forecast.settings import BASE_DIR, TIME_ZONE
 from weather_forecast.apps.forecast.models import Waypoint
 
 
@@ -189,6 +190,24 @@ def _create_precipitation_9_days_plot(values):
     plt.gcf().autofmt_xdate()
     return plt
 
+def get_current_time(lat, lng):
+    URL = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s,%s&timestamp=1458000000&key='
+    timezone_url = URL % (lat, lng)
+    timezone_key_url = timezone_url + 'AIzaSyCdQRXIWzZ5NzA8_-IpLMAG8iwR6QUv9T8'
+    with urlopen(timezone_url) as url:
+        data = url.read().decode('utf-8')
+    data_json = json.loads(data)
+    location_timezone = data_json['timeZoneId']
+    local_timezone = timezone(TIME_ZONE)
+    location_time_zone = timezone(location_timezone)
+    local_dt = local_timezone.localize(datetime.now())
+    location_dt = local_dt.astimezone(location_time_zone)
+    fmt = "%H:%M %p"
+    location_time_str = datetime.strftime(location_dt, fmt)
+    location_time = datetime.strptime(location_time_str, fmt)
+    print("location_time: ", location_time, " type: ", type(location_time))
+    return location_time
+
 def get_time_of_day(lat, lng):
     URL = 'http://api.sunrise-sunset.org/json'
     url_sunrise_sunset_times = URL + "?lat=%s&lng=%s" % (lat, lng)
@@ -201,15 +220,16 @@ def get_time_of_day(lat, lng):
     sunrise = datetime.strptime(sunrise_str, "%X %p")
     sunset = datetime.strptime(sunset_str, "%X %p")
 
-    now = datetime.now()    # change to localtime
+    now = get_current_time(lat, lng)
     if sunrise < now < sunset:
         return 'day'
     return 'night'
 
+
 def forecast_details(request, name):
     try:
         location = _coordinates(name)
-    except AttributeError:
+    except (AttributeError, TypeError):
         messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
         return redirect(reverse('select'))
 
@@ -221,7 +241,7 @@ def forecast_details(request, name):
     meteo_parameters = _get_data(url)[0]
     precipitation_parameters = _get_data(url)[1]
 
-    current_time = meteo_parameters[0][0]
+    current_time = datetime.now()
     current_temperature = meteo_parameters[0][2]
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
