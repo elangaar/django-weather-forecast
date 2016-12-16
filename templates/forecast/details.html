@@ -1,22 +1,26 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block title %} {{ name }} ({{ country }}) {% endblock %}
 {% block head %}
 
-<meta name="viewport" content="initial-scale=1.0" />
 <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
     #map {
-        height: 500px;
-        width: 500px;
+        height: 300px;
+        width: 350px;
     }
-    #current_conditions_pics {
-        height: 100px;
-        width: 100px;
+    #waypoint {
+        height: 100%;
+        width: 350px;
     }
-    /* Optional: Makes the sample page fill the window. */
+    #pictograms {
+        padding-top: 30px;
+        padding-bottom: 30px;
+    }
+    #info {
+        padding-top: 40px;
+    }
     html, body {
         height: 100%;
         margin: 0;
@@ -25,60 +29,89 @@
 </style>
 {% endblock head %}
 {% block content %}
-
-<p> Lokalizacja: {{ name|title }} </p>
-<p> Szerokość geograficzna: {{ lat }} </p>
-<p> Długość geograficzna: {{ lng }} </p>
-<p> Stan na: {{ current_time }} </p>
-<p> Temperatura: {{ current_temperature }} </p>
-<p> Ciśnienie: {{ current_pressure }} </p>
-<p> Wilgotność: {{ current_humidity }} </p>
-<p> Opad: {{ current_precipitation }} </p>
-<p> Zachmurzenie: {{ current_cloudiness }} </p>
-
-
-{% if current_precipitation > 6 and current_cloudiness < 80 %}
-    <img src="{% static 'forecast/symbols/heav_rain.jpg' %}"
-    alt="Duży opad deszczu" />
-{% elif current_precipitation > 0 and current_precipitation <= 6 and current_cloudiness > 80 %}
-    <img src="{% static 'forecast/symbols/rain.jpg' %}" alt="Opad deszczu" />
-{% elif current_precipitation < 10 and current_cloudiness > 80 %}
-    <img src="{% static 'forecast/symbols/clouds.jpg' %}"
-    alt="Pochmurno" />
-{% endif %}
-
-{% if  time_of_day == 'night' %} 
-    {% if current_precipitation == 0 and current_cloudiness < 20 %}
-        <img src="{% static 'forecast/symbols/moon.jpg' %}"
-        alt="Księżyc">
-    {% elif current_precipitation == 0 and current_cloudiness > 20 and current_cloudiness <= 80 %}
-        <img src="{% static 'forecast/symbols/clouds_moon.jpg' %}" alt="Niewielka ilość chmur">
-    {% elif current_precipitation > 0 and current_cloudiness > 20 and current_cloudiness <= 80 %}
-        <img src="{% static 'forecast/symbols/clouds_moon_rain.jpg' %}" alt="Zachmurzenie i niewielki deszcz">
-    {% endif %}
-{% endif %}
-
-{% if time_of_day == 'day' %} 
-    {% if current_precipitation == 0 and current_cloudiness <= 20 %}
-        <img src="{% static 'forecast/symbols/sun.jpg' %}"
-        alt="Słońce">
-    {% elif current_precipitation == 0 and current_cloudiness > 20 and current_cloudiness <= 80 %}
-        <img src="{% static 'forecast/symbols/clouds_sun.jpg' %}" alt="Niewielka ilość chmur">
-    {% elif current_precipitation > 0 and current_cloudiness > 20 and current_cloudiness <= 80%}
-        <img src="{% static 'forecast/symbols/clouds_sun_rain.jpg' %}" alt="Zachmurzenie i niewielki deszcz">
-    {% endif %}
-{% endif %}
-
-
-<div id=map>
-<div id=waypoints> {{ content }} </div>
+<div class="row">
+    <div>
+        <hr />
+        <h2> {{ name|title }} ({{ country }})</h2>
+        <hr />
+    </div>
 </div>
+<div class="row"> <!-- Wszystko ponizej navbar -->
+    <div id="info" >
+        <div class="col-md-4">
+            <h4>Aktualna pogoda: <br />
+            <small>czas lokalny: {{ current_time }} <br /> 
+            {{ name|title }}: {{ current_location_time }}</small></h4><br />
+            <div class="row">
+                <div class="col-md-5">
+                    <p><b> Szerokość geogr.: </b></p>
+                    <p><b> Długość geogr.: </b></p>
+                    <p><b> Temperatura:  </b></p>
+                    <p><b> Ciśnienie:  </b></p>
+                    <p><b> Wilgotność: </b></p>
+                    <p><b> Opad:  </b></p>
+                    <p><b> Zachmurzenie:  </b></p>
+                </div>
+                <div class="col-md-7">
+                    <p> {{ lat|floatformat:2 }} </p>
+                    <p> {{ lng|floatformat:2 }} </p>
+                    <p> {{ current_temperature }} &#8451;</p>
+                    <p> {{ current_pressure }} hPa</p>
+                    <p> {{ current_humidity }} %</p>
+                    <p> {{ current_precipitation }} mm</p>
+                    <p> {{ current_cloudiness }} %</p>
+                </div>
+            </div>
+            <div class="row">
+                <div id="pictograms" class="text-center">
+                    {% if current_precipitation > 6 and current_cloudiness < 80 %}
+                        <img src="{% static 'forecast/symbols/heav_rain.jpg' %}"
+                        alt="Duży opad deszczu" />
+                    {% elif current_precipitation > 0 and current_precipitation <= 6 and current_cloudiness > 80 %}
+                        <img src="{% static 'forecast/symbols/rain.jpg' %}" alt="Opad deszczu" />
+                    {% elif current_precipitation < 10 and current_cloudiness > 80 %}
+                        <img src="{% static 'forecast/symbols/clouds.jpg' %}"
+                        alt="Pochmurno" />
+                    {% endif %}
+                    {% if  time_of_day == 'night' %} 
+                        {% if current_precipitation == 0 and current_cloudiness < 20 %}
+                            <img src="{% static 'forecast/symbols/moon.jpg' %}"
+                            alt="Księżyc">
+                        {% elif current_precipitation == 0 and current_cloudiness > 20 and current_cloudiness <= 80 %}
+                            <img src="{% static 'forecast/symbols/clouds_moon.jpg' %}" alt="Niewielka ilość chmur">
+                        {% elif current_precipitation > 0 and current_cloudiness > 20 and current_cloudiness <= 80 %}
+                            <img src="{% static 'forecast/symbols/clouds_moon_rain.jpg' %}" alt="Zachmurzenie i niewielki deszcz">
+                        {% endif %}
+                    {% endif %}
+                    {% if time_of_day == 'day' %} 
+                        {% if current_precipitation == 0 and current_cloudiness <= 20 %}
+                            <img src="{% static 'forecast/symbols/sun.jpg' %}"
+                            alt="Słońce">
+                        {% elif current_precipitation == 0 and current_cloudiness > 20 and current_cloudiness <= 80 %}
+                            <img src="{% static 'forecast/symbols/clouds_sun.jpg' %}" alt="Niewielka ilość chmur">
+                        {% elif current_precipitation > 0 and current_cloudiness > 20 and current_cloudiness <= 80%}
+                            <img src="{% static 'forecast/symbols/clouds_sun_rain.jpg' %}" alt="Zachmurzenie i niewielki deszcz">
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+                    <div id="map" ></div>
+                    <div id="waypoints"> {{ content }} </div>
+        </div>
+        </div>
+            <div class="col-md-8">
+                <img src="{% static 'forecast/plots/plot.png' %}" alt="Wykresy parametrów
+        meteo i opadów" />
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     function initMap() {
         var map = new google.maps.Map(document.getElementById('map'), {
             center: new google.maps.LatLng({{ Lat }}, {{ Lng }}), 
             zoom: 7,
-            mapTypeId: 'roadmap'  
         });
         var marker = new google.maps.Marker({ 
             position: {lat: {{ Lat }}, lng: {{ Lng }}},
@@ -88,19 +121,9 @@
     marker.setMap(map)
     }
 </script>
-<img src="{% static 'forecast/plots/plot.png' %}" alt="Wykresy parametrów
-meteo i opadów" />
 
 
-
-
-<p> URL: {{ url }} </p>
-<p> Dane meteo: {{ data }} </p>
-<p> Dane opadowe 6-cio godzinne: {{ data1 }} </p>
-<p> Dane opadowe 3 godzinne: {{ data2 }} </p>
-
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCO_1_t4RPgXXqBmpKu30xYC_cBH_yj8po&callback=initMap" async defer> type="text/javascript"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC8txt-tQXwWaOSMdkL7R8KNKK3K7SN4P8&callback=initMap" async defer> type="text/javascript"></script>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 {% endblock content %}
 
