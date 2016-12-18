@@ -190,7 +190,7 @@ def _create_precipitation_9_days_plot(values):
     plt.gcf().autofmt_xdate()
     return plt
 
-def get_current_time(lat, lng):
+def get_current_location_time(lat, lng):
     URL = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s,%s&timestamp=1458000000&key='
     timezone_url = URL % (lat, lng)
     timezone_key_url = timezone_url + 'AIzaSyCdQRXIWzZ5NzA8_-IpLMAG8iwR6QUv9T8'
@@ -203,10 +203,12 @@ def get_current_time(lat, lng):
     local_dt = local_timezone.localize(datetime.now())
     location_dt = local_dt.astimezone(location_time_zone)
     fmt = "%H:%M %p"
+    fmdt = "%d %B %Y %H:%M"
     location_time_str = datetime.strftime(location_dt, fmt)
+    location_datetime_str = datetime.strftime(location_dt, fmdt)
     location_time = datetime.strptime(location_time_str, fmt)
     print("location_time: ", location_time, " type: ", type(location_time))
-    return location_time
+    return (location_time, location_datetime_str)
 
 def get_time_of_day(lat, lng):
     URL = 'http://api.sunrise-sunset.org/json'
@@ -220,7 +222,7 @@ def get_time_of_day(lat, lng):
     sunrise = datetime.strptime(sunrise_str, "%X %p")
     sunset = datetime.strptime(sunset_str, "%X %p")
 
-    now = get_current_time(lat, lng)
+    now = get_current_location_time(lat, lng)[0]
     if sunrise < now < sunset:
         return 'day'
     return 'night'
@@ -242,6 +244,7 @@ def forecast_details(request, name):
     precipitation_parameters = _get_data(url)[1]
 
     current_time = datetime.now()
+    current_location_time = get_current_location_time(lat, lng)[1]
     current_temperature = meteo_parameters[0][2]
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
@@ -266,6 +269,7 @@ def forecast_details(request, name):
         'time_of_day': time_of_day,
         'country': country,
         'current_time': current_time,
+        'current_location_time': current_location_time,
         'current_temperature': current_temperature,
         'current_pressure': current_pressure,
         'current_humidity': current_humidity,

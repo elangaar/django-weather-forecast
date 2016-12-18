@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 
-
+{% block head %}
+<style>
+#mainBlock {
+    margin-top: 70px;
+}
+</style>
+{% endblock head %}
 
 {% block content %}
-<div class="starter-template">
+<div id="mainBlock" class="starter-template">
     <h2>Czy będzie padać?</h2>
     <p class="lead"> Czy będzie padać? Jaka będzie temperatura? Jaka jest
     teraz pogoda? Na te i inne pytania dotyczące prognozy pogody dla

@@ -9,7 +9,7 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   {% block head %} {% endblock head %}
 <style>
-<!-- #message { margin: 0; padding: 0; } -->
+
 </style>
 </head>
 <body onload='initMap()'>
@@ -23,6 +23,7 @@
     <form class="navbar-form navbar-right" action="{% url 'select' %}" method="POST" > 
         {% csrf_token %}
                           {% if messages %}
+        
             <div id="message" class="navbar-text">
                 {% for message in messages %}
                 {{ message }}
