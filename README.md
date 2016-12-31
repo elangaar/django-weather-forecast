@@ -1,10 +1,9 @@
-weather forecast
+#weather forecast
 ===
 
 weather forecast is a simple application to check weather forecast in a specific place. weather forecast provides information about actual weather parameter, localization of your place and predicted temperature, atmospheric pressure, humidity and height of precipitation.
-===
 
-#Installation
+##Installation
 
 1. Install python 3
 
