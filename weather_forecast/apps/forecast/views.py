@@ -25,7 +25,6 @@ from pytz import timezone
 
 from .forms import SelectForm
 from weather_forecast.settings import BASE_DIR, TIME_ZONE
-from weather_forecast.apps.forecast.models import Waypoint
 
 
 
@@ -51,7 +50,6 @@ def select(request):
 def _coordinates(name):
     geolocator = Nominatim()
     location = geolocator.geocode(name)
-    print(location)
     country = location[0].split(', ')[-1]
     return (location.latitude, location.longitude, country)
 
@@ -207,7 +205,6 @@ def get_current_location_time(lat, lng):
     location_time_str = datetime.strftime(location_dt, fmt)
     location_datetime_str = datetime.strftime(location_dt, fmdt)
     location_time = datetime.strptime(location_time_str, fmt)
-    print("location_time: ", location_time, " type: ", type(location_time))
     return (location_time, location_datetime_str)
 
 def get_time_of_day(lat, lng):
@@ -256,8 +253,6 @@ def forecast_details(request, name):
 
     Lat = str(lat).replace(',', '.')
     Lng = str(lng).replace(',', '.')
-    waypoints = Waypoint.objects.create(name=name, geometry='POINT({}\
-                                       {})'.format(Lat, Lng)).save()
     pora = 'noc'
 
     context = {
@@ -279,8 +274,5 @@ def forecast_details(request, name):
         'data': meteo_parameters,
         'data1': precipitation_6_hours_values,
         'data2': precipitation_3_hours_values,
-        'content': render_to_string("forecast/waypoints.html", {'waypoints':
-                                                                waypoints})
-
     }
     return render(request, "forecast/details.html", context)
