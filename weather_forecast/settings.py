@@ -78,12 +78,8 @@ WSGI_APPLICATION = 'weather_forecast.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'geo_db',
-        'USER': 'geo_db_user',
-        'PASSWORD': 'geo_db_password',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'my_db',
     }
 }
 
