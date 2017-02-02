@@ -1,6 +1,6 @@
 from urllib.request import urlopen
-import re
 from datetime import datetime, timedelta
+import re
 import os
 
 
@@ -15,7 +15,6 @@ from django.template.loader import render_to_string
 from geopy.geocoders import Nominatim
 import xmltodict
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -166,7 +165,7 @@ def _create_precipitation_60_hours_plot(values):
     times = [time[0] for time in values]
     values = [value[1] for value in values]
     plt.subplot(514)
-    plt.bar(times, values, width=0.125, alpha=1.0, color=['grey'])
+    plt.bar(times, values, width=0.1, alpha=1.0, color=['grey'])
     plt.title("Wysokość opadu (prognoza na 60 godzin)", fontsize=11)
     plt.ylabel("[mm]")
     plt.grid(True, linestyle="-", linewidth="0.2")
@@ -179,7 +178,7 @@ def _create_precipitation_9_days_plot(values):
     times = [time[0] for time in values]
     values = [value[1] for value in values]
     plt.subplot(515)
-    plt.bar(times, values, width=0.125, alpha=1.0, color=['grey'])
+    plt.bar(times, values, width=0.150, alpha=1.0, color=['grey'])
     plt.title("Wysokość opadu (prognoza na 9 dni)", fontsize=11)
     plt.ylabel("[mm]")
     plt.grid(True, linestyle="-", linewidth="0.2")

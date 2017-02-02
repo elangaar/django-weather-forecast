@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <title> {% block title %} {% endblock title %} </title>
+    <title> {% block title %} PrognozaPogody {% endblock title %} </title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -17,7 +17,7 @@
 <nav class="nav navbar-inverse">
   <div class="container-fluid">
     <div class="navbar-header">
-        <a class="navbar-brand" href="{% url "select"%}"> Czy będzie padać? </a>
+        <a class="navbar-brand" href="{% url "select"%}"> PrognozaPogody </a>
     </div>
 
     <form class="navbar-form navbar-right" action="{% url 'select' %}" method="POST" > 
