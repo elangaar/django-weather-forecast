@@ -2,6 +2,9 @@ from urllib.request import urlopen
 from datetime import datetime, timedelta
 import re
 import os
+import logging
+logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+import dateutil.parser as dparser
 
 
 from django.shortcuts import render, redirect
@@ -205,7 +208,7 @@ def get_current_location_time(lat, lng):
     location_time_str = datetime.strftime(location_dt, fmt)
     location_datetime_str = datetime.strftime(location_dt, fmdt)
     location_time = datetime.strptime(location_time_str, fmt)
-    return (location_time, location_datetime_str)
+    return (location_dt, location_datetime_str, location_time)
 
 def get_time_of_day(lat, lng):
     URL = 'http://api.sunrise-sunset.org/json'
@@ -215,15 +218,25 @@ def get_time_of_day(lat, lng):
     data_json = json.loads(data)
     sunrise_str = str(data_json['results']['sunrise'])
     sunset_str = str(data_json['results']['sunset'])
+    logging.debug('sunrise_str: %s' % (sunrise_str))
+    sunrise = dparser.parse(sunrise_str)
+    sunset = dparser.parse(sunset_str)
 
-    sunrise = datetime.strptime(sunrise_str, "%X %p")
-    sunset = datetime.strptime(sunset_str, "%X %p")
+    # sunrise = datetime.strptime(sunrise, "%H:%M:%S")
+    # sunset = datetime.strptime(sunset, "%H:%M:%S")
+    
+    logging.debug('sunrise: %s, sunset: %s' % (sunrise, sunset))
 
-    now = get_current_location_time(lat, lng)[0]
+    now = get_current_location_time(lat, lng)[2]
     if sunrise < now < sunset:
         return 'day'
     return 'night'
 
+def current_location_time_display(location_dt):
+    import locale
+    location_dt = datetime.strptime(location_dt, "%d %B %Y %H:%M")
+    locale.setlocale(locale.LC_TIME, "pl_PL.utf8")
+    return datetime.strftime(location_dt, "%d %B %Y %H:%M")
 
 def forecast_details(request, name):
     try:
@@ -255,6 +268,8 @@ def forecast_details(request, name):
     Lng = str(lng).replace(',', '.')
     pora = 'noc'
 
+    current_location_time_display_value = current_location_time_display(current_location_time)
+
     context = {
         'name': name,
         'lat': lat,
@@ -264,7 +279,7 @@ def forecast_details(request, name):
         'time_of_day': time_of_day,
         'country': country,
         'current_time': current_time,
-        'current_location_time': current_location_time,
+        'current_location_time': current_location_time_display_value,
         'current_temperature': current_temperature,
         'current_pressure': current_pressure,
         'current_humidity': current_humidity,
