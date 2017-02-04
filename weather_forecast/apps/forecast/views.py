@@ -115,6 +115,7 @@ def _create_plots(meteo_values, precipitation_3_hours_values,
     _create_humidity_plot(meteo_values)
     _create_precipitation_60_hours_plot(precipitation_3_hours_values)
     _create_precipitation_9_days_plot(precipitation_6_hours_values)
+    fig.tight_layout(h_pad=3.5)
     return fig.savefig(os.path.join(PLOT_PATH, 'plot.png'))
 
 
