@@ -1,4 +1,5 @@
 from urllib.request import urlopen
+
 from datetime import datetime, timedelta
 import re
 import os
@@ -270,6 +271,22 @@ def forecast_details(request, name):
 
     current_location_time_display_value = current_location_time_display(current_location_time)
 
+
+
+
+    times = [time[0] for time in meteo_parameters]
+    len_times = len(times)
+    times_tuples = []
+    for i in range(len_times):
+        time = times[i]
+        time_tuple = ([time.month, time.day, time.year, time.hour, time.minute])
+        times_tuples.append(time_tuple)
+    temp_values_str = [value[2] for value in meteo_parameters]
+    temp_values = [float(value) for value in temp_values_str]
+    press_values = [float(value[3]) for value in meteo_parameters]
+    hum_values = [float(value[4]) for value in meteo_parameters]
+
+
     context = {
         'name': name,
         'lat': lat,
@@ -289,5 +306,26 @@ def forecast_details(request, name):
         'data': meteo_parameters,
         'data1': precipitation_6_hours_values,
         'data2': precipitation_3_hours_values,
+        'len_times': len_times,
+        'temperature_values': temp_values,
+        'times_tuples': times_tuples,
+        'pressure_values': press_values,
+        'humidity_values': hum_values,
+        'precipitation_6_hours_values': precip_6_values,
+        'precipitation_3_hours_values': precip_3_values,
     }
     return render(request, "forecast/details.html", context)
+
+def plots(request):
+    plot_times = []
+    for i in range(10):
+        time = datetime.now() + timedelta(hours=i) + timedelta(hours=2)
+        time_tuples = ([time.month, time.day, time.year, time.hour, time.minute])
+        plot_times.append(time_tuples)
+    plot_values = [1, 4, 1, 4, 7, 9, 7, 3, 4]
+
+    context = {
+        'times': plot_times,
+        'values': plot_values,
+    }
+    return render(request, "forecast/plot.html", context)

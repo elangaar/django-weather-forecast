@@ -23,6 +23,83 @@
         padding: 0;
     }
 </style>
+<script>
+$(document).ready(function() {
+    var timesFlot = [];
+    var times = {{ times_tuples }};
+    var tempValues = {{ temperature_values }};
+    var pressValues = {{ pressure_values }};
+    var humValues = {{ humidity_values }};
+    var humValues = {{ precipitation_6_hours_values }};
+    var humValues = {{ precipitation_3_hours_values }};
+    var plotTempValues = [];
+    var plotPressValues = [];
+    var plotHumValues = [];
+
+    for (var i = 0; i < {{ len_times }}; i++) {
+        timesFlot.push(new Date( times[i][2], times[i][0],
+            times[i][1], times[i][3], times[i][4] ));
+    }
+    for (var i = 0; i < times.length; i++) {
+        plotTempValues.push([timesFlot[i], tempValues[i]]);
+        plotPressValues.push([timesFlot[i], pressValues[i]]);
+        plotHumValues.push([timesFlot[i], humValues[i]]);
+        
+    }
+    $.plot("#plot-temperature", [ plotTempValues ], {
+        colors: ['#FF0000'],
+        xaxis: {
+            mode: 'time',
+            timestamp: '%Y%m%d %H:%M',
+        },
+        points:{
+            show: true,
+            radius: 3
+        }, 
+        lines: {
+            show: true,
+            fill: false,
+            fillColor: { colors: [{ opacity: 0.7 }, { opacity: 0.1}] }
+        },
+    });
+    $.plot("#plot-pressure", [ plotPressValues ], {
+        colors: ['#00FF42'],
+        xaxis: {
+            mode: 'time',
+            timestamp: '%Y%m%d %H:%M',
+        },
+        points:{
+            show: true,
+            radius: 3
+        },
+        lines: {
+            show: true,
+            fill: false,
+            fillColor: { colors: [{ opacity: 0.7 }, { opacity: 0.1}] }
+        },
+    });
+    $.plot("#plot-humidity", [ plotHumValues ], {
+        colors: ['#0040FF'],
+        xaxis: {
+            mode: 'time',
+            timestamp: '%Y%m%d %H:%M',
+        },
+        points:{
+            show: true,
+            radius: 3
+        }, 
+        lines: {
+            show: true,
+            fill: false,
+            fillColor: { colors: [{ opacity: 0.7 }, { opacity: 0.1}] }
+        },
+    });
+    console.log(plotTempValues);
+
+
+});
+
+</script>
 {% endblock head %}
 {% block navbar %} {% endblock navbar %}
 {% block content %}
@@ -97,6 +174,17 @@
             <div class="col-md-8 text-right">
                 <img src="{% static 'forecast/plots/plot.png' %}" alt="Wykresy parametrów
         meteo i opadów" />
+                <div id="plot-temperature" style="width:600px;height:200px"> </div>
+                <div id="plot-pressure" style="width:600px;height:200px"> </div>
+                <div id="plot-humidity" style="width:600px;height:200px"> </div>
+                <div id="plot-precipitation-6-hours"style="width:600px;height:200px"> </div>
+                <div id="plot-precipitation-3-hours" style="width:600px;height:200px"> </div>
+                <div>
+                <p> {{ times }} </p>
+                <p> {{ temperature_values }} </p>
+                <p> {{ len_times }} </p>
+                </div>
+
             </div>
         </div>
     </div>
@@ -119,6 +207,8 @@
 
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC8txt-tQXwWaOSMdkL7R8KNKK3K7SN4P8&callback=initMap" async defer> type="text/javascript"></script>
-<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="{% static 'js/flot/jquery.min.js' %}"></script>
+<script src="{% static 'js/flot/jquery.flot.js' %}"></script>
+<script src="{% static 'js/flot/jquery.flot.time.js' %}"></script>
 {% endblock content %}
 
