@@ -27,25 +27,52 @@
 $(document).ready(function() {
     var timesFlot = [];
     var times = {{ times_tuples }};
+    var timesFlot6Precip = [];
+    var timesFlot3Precip = [];
     var tempValues = {{ temperature_values }};
     var pressValues = {{ pressure_values }};
     var humValues = {{ humidity_values }};
-    var humValues = {{ precipitation_6_hours_values }};
-    var humValues = {{ precipitation_3_hours_values }};
+    var precip6Values = {{ precipitation_6_hours_values }};
+    var precip3Values = {{ precipitation_3_hours_values }};
     var plotTempValues = [];
     var plotPressValues = [];
     var plotHumValues = [];
+    var plotPrecip6Values = [];
+    var plotPrecip3Values = [];
+    var times_6 = {{ precip_6_times }};
+    var times_3 = {{ precip_3_times }};
+
+    console.log(times_6[0]);
 
     for (var i = 0; i < {{ len_times }}; i++) {
         timesFlot.push(new Date( times[i][2], times[i][0],
             times[i][1], times[i][3], times[i][4] ));
     }
+    for (var i = 0; i < precip6Values.length; i++) {
+        timesFlot6Precip.push(new Date(times_6[i][0],
+                    times_6[i][1],times_6[i][2],
+                    times_6[i][3],times_6[i][4]));
+    }
+    console.log(timesFlot6Precip);
+    for (var i = 0; i < precip3Values.length; i++) {
+        timesFlot3Precip.push(new Date(times_3[i][0],
+                    times_3[i][1],times_3[i][2],
+                    times_3[i][3],times_3[i][4]));
+    }
+    for (var i = 0; i < precip3Values.length; i++) {
+        timesFlot3Precip.push(new Date(precip3Values[i][0]))
+
+    }
     for (var i = 0; i < times.length; i++) {
         plotTempValues.push([timesFlot[i], tempValues[i]]);
         plotPressValues.push([timesFlot[i], pressValues[i]]);
         plotHumValues.push([timesFlot[i], humValues[i]]);
+        plotPrecip6Values.push([timesFlot6Precip[i], precip6Values[i]]);
+        plotPrecip3Values.push([timesFlot3Precip[i], precip3Values[i]]);
+        
         
     }
+    
     $.plot("#plot-temperature", [ plotTempValues ], {
         colors: ['#FF0000'],
         xaxis: {
@@ -94,7 +121,40 @@ $(document).ready(function() {
             fillColor: { colors: [{ opacity: 0.7 }, { opacity: 0.1}] }
         },
     });
-    console.log(plotTempValues);
+    $.plot("#plot-precipitation-6-hours", [ plotPrecip6Values ], {
+        colors: ['#0040FF'],
+        xaxis: {
+            mode: 'time',
+            timestamp: '%Y%m%d %H:%M',
+        },
+        points:{
+            show: true,
+            radius: 3
+        }, 
+        series: {
+            bars: {
+                show: true,
+                barWidth: 0.4,
+                align: "center"
+            }
+        },
+    });
+    $.plot("#plot-precipitation-3-hours", [ plotPrecip3Values ], {
+        colors: ['#0040FF'],
+        xaxis: {
+            mode: 'time',
+            timestamp: '%Y%m%d %H:%M',
+        },
+        points:{
+            show: true,
+            radius: 3
+        }, 
+        bars: {
+            show: true,
+            barWidth: 0.4
+
+        },
+    });
 
 
 });
@@ -183,6 +243,7 @@ $(document).ready(function() {
                 <p> {{ times }} </p>
                 <p> {{ temperature_values }} </p>
                 <p> {{ len_times }} </p>
+                <p> {{ humidity_values }} </p>
                 </div>
 
             </div>

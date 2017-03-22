@@ -83,6 +83,26 @@ def _get_precipitation_parameters(time_from, time_to, data):
         precipitation_6_hours_values.append(precipitation_record)
 
 
+precip_3_values = []
+precip_6_values = []
+
+times_tuple_6 = []
+def _get_precipitation_values(time_from, time_to, data):
+    if time_to - time_from == timedelta(hours=3):
+        precipitation_value = data['location']['precipitation']['@value']
+        time_tuple_6 = (time_from.year, time_from.month, time_from.day,
+                time_from.hour, time_from.minute)
+        times_tuple_6.append(time_tuple_6)
+        precip_6_values.append((time_tuple_6, float(precipitation_value)))
+    if time_to - time_from == timedelta(hours=6):
+        precipitation_value = data['location']['precipitation']['@value']
+        time_tuple_3 = ([time_from.year, time_from.month, time_from.day,
+                time_from.hour, time_from.minute])
+        precip_3_values.append((time_tuple_3, float(precipitation_value)))
+
+
+
+
 def _get_data(url):
     with urlopen(url) as file:
         raw_data = file.read()
@@ -259,7 +279,7 @@ def forecast_details(request, name):
     current_temperature = meteo_parameters[0][2]
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
-    current_precipitation = float(precipitation_6_hours_values[0][1])
+    # current_precipitation = float(precipitation_6_hours_values[0][1])
     current_cloudiness = float(meteo_parameters[0][5])
 
     time_of_day = get_time_of_day(lat, lng)
@@ -271,6 +291,36 @@ def forecast_details(request, name):
 
     current_location_time_display_value = current_location_time_display(current_location_time)
 
+
+    precip_6_times = []
+    for i in range(len(precipitation_6_hours_values)):
+        time = ([precipitation_6_hours_values[i][0].year,
+                precipitation_6_hours_values[i][0].month,
+                precipitation_6_hours_values[i][0].day,
+                precipitation_6_hours_values[i][0].hour,
+                precipitation_6_hours_values[i][0].minute])
+        precip_6_times.append(time)
+
+    precip_6_values = []
+    for i in range(len(precipitation_6_hours_values)):
+        value = precipitation_6_hours_values[i][1]
+        precip_6_values.append(value)
+
+    logging.debug(precip_6_times)
+
+    precip_3_times = []
+    for i in range(len(precipitation_3_hours_values)):
+        time = ([precipitation_3_hours_values[i][0].year,
+                precipitation_3_hours_values[i][0].month,
+                precipitation_3_hours_values[i][0].day,
+                precipitation_3_hours_values[i][0].hour,
+                precipitation_3_hours_values[i][0].minute])
+        precip_3_times.append(time)
+
+    precip_3_values = []
+    for i in range(len(precipitation_3_hours_values)):
+        value = precipitation_3_hours_values[i][1]
+        precip_3_values.append(value)
 
 
 
@@ -285,6 +335,10 @@ def forecast_details(request, name):
     temp_values = [float(value) for value in temp_values_str]
     press_values = [float(value[3]) for value in meteo_parameters]
     hum_values = [float(value[4]) for value in meteo_parameters]
+    prec_6_values = [float(value[1]) for value in precipitation_6_hours_values]
+    prec_3_values = [float(value[1]) for value in precipitation_3_hours_values]
+
+
 
 
     context = {
@@ -300,7 +354,7 @@ def forecast_details(request, name):
         'current_temperature': current_temperature,
         'current_pressure': current_pressure,
         'current_humidity': current_humidity,
-        'current_precipitation': current_precipitation,
+        # 'current_precipitation': current_precipitation,
         'current_cloudiness': current_cloudiness,
         'url': url,
         'data': meteo_parameters,
@@ -311,8 +365,12 @@ def forecast_details(request, name):
         'times_tuples': times_tuples,
         'pressure_values': press_values,
         'humidity_values': hum_values,
-        'precipitation_6_hours_values': precip_6_values,
-        'precipitation_3_hours_values': precip_3_values,
+        'precipitation_6_hours_values': prec_6_values,
+        'precipitation_3_hours_values': prec_3_values,
+        'times_tuple_6': times_tuple_6,
+        'precipitation_parameters': precipitation_parameters,
+        'precip_6_times': precip_6_times,
+        'precip_3_times': precip_3_times,
     }
     return render(request, "forecast/details.html", context)
 
