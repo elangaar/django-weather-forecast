@@ -3,10 +3,11 @@ from urllib.request import urlopen
 from datetime import datetime, timedelta
 import re
 import os
+
 import logging
 logging.basicConfig(level=logging.DEBUG, format="%(message)s")
-import dateutil.parser as dparser
 
+import dateutil.parser as dparser
 
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
@@ -61,9 +62,10 @@ def _get_url(url, lat, lng):
 
 
 precipitation_3_hours_values = []
+precipitation_3_hours_times = []
+
 precipitation_6_hours_values = []
-precipitation_3_hours_data = []
-precipitation_6_hours_data = []
+precipitation_6_hours_times = []
 
 def _get_meteo_parameters(time_from, time_to, data):
     temperature = data['location']['temperature']['@value']
@@ -75,12 +77,18 @@ def _get_meteo_parameters(time_from, time_to, data):
 def _get_precipitation_parameters(time_from, time_to, data):
     if time_to - time_from == timedelta(hours=3):
         precipitation_value = data['location']['precipitation']['@value']
-        precipitation_record = (time_from, float(precipitation_value))
-        precipitation_3_hours_values.append(precipitation_record)
+        time = [time_from.year, time_from.month, time_from.day, time_from.hour,
+                time_from.minute]
+        logging.debug('time: %s' % time)
+        precipitation_3_hours_times.append(time)
+        precipitation_3_hours_values.append(float(precipitation_value))
+
     if time_to - time_from == timedelta(hours=6):
         precipitation_value = data['location']['precipitation']['@value']
-        precipitation_record = (time_from, float(precipitation_value))
-        precipitation_6_hours_values.append(precipitation_record)
+        time = [time_from.year, time_from.month, time_from.day, time_from.hour,
+                time_from.minute]
+        precipitation_6_hours_times.append(time)
+        precipitation_6_hours_values.append(float(precipitation_value))
 
 
 precip_3_values = []
@@ -127,90 +135,6 @@ def _get_data(url):
             pass
 
     return (meteo_parameters, precipitation_parameters)
-
-def _create_plots(meteo_values, precipitation_3_hours_values,
-                  precipitation_6_hours_values):
-    fig = plt.figure()
-    fig.set_figheight(10)
-    fig.subplots_adjust(hspace=0.5)
-    matplotlib.rcParams.update({'font.size': 10})
-    _create_temperature_plot(meteo_values)
-    _create_pressure_plot(meteo_values)
-    _create_humidity_plot(meteo_values)
-    _create_precipitation_60_hours_plot(precipitation_3_hours_values)
-    _create_precipitation_9_days_plot(precipitation_6_hours_values)
-    fig.tight_layout(h_pad=3.5)
-    return fig.savefig(os.path.join(PLOT_PATH, 'plot.png'))
-
-
-def _create_temperature_plot(values):
-    times = [time[0] for time in values]
-    values = [value[2] for value in values]
-    plt.subplot(511)
-    plt.plot(times, values, 'r-')
-    plt.title("Temperatura", fontsize=11)
-    plt.ylabel("[C]")
-    plt.grid(True, linestyle="-", linewidth="0.2")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.gcf().autofmt_xdate()
-    return plt
-
-def _create_pressure_plot(values):
-    times = [time[0] for time in values]
-    values = [value[3] for value in values]
-    plt.subplot(512)
-    plt.plot(times, values, 'g-')
-    plt.title("Ciśnienie", fontsize=11)
-    plt.ylabel("[hPa]")
-    plt.xlabel('')
-    plt.grid(True, linestyle="-", linewidth="0.2")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.gcf().autofmt_xdate()
-
-    return plt
-
-def _create_humidity_plot(values):
-    times = [time[0] for time in values]
-    values = [value[4] for value in values]
-    plt.subplot(513)
-    plt.xticks()
-    plt.plot(times, values, 'b-')
-    plt.title("Wilgotność", fontsize=11)
-    plt.ylabel("[%]")
-    plt.grid(True, linestyle="-", linewidth="0.2")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.gcf().autofmt_xdate()
-
-    return plt
-
-def _create_precipitation_60_hours_plot(values):
-    times = [time[0] for time in values]
-    values = [value[1] for value in values]
-    plt.subplot(514)
-    plt.bar(times, values, width=0.1, alpha=1.0, color=['grey'])
-    plt.title("Wysokość opadu (prognoza na 60 godzin)", fontsize=11)
-    plt.ylabel("[mm]")
-    plt.grid(True, linestyle="-", linewidth="0.2")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.gcf().autofmt_xdate()
-    return plt
-
-def _create_precipitation_9_days_plot(values):
-    times = [time[0] for time in values]
-    values = [value[1] for value in values]
-    plt.subplot(515)
-    plt.bar(times, values, width=0.150, alpha=1.0, color=['grey'])
-    plt.title("Wysokość opadu (prognoza na 9 dni)", fontsize=11)
-    plt.ylabel("[mm]")
-    plt.grid(True, linestyle="-", linewidth="0.2")
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
-    plt.gca().xaxis.set_major_locator(mdates.DayLocator())
-    plt.gcf().autofmt_xdate()
-    return plt
 
 def get_current_location_time(lat, lng):
     URL = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s,%s&timestamp=1458000000&key='
@@ -266,13 +190,10 @@ def forecast_details(request, name):
         messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
         return redirect(reverse('select'))
 
-    lat = location[0]
-    lng = location[1]
-    country = location[2]
+    lat, lng, country = location
 
     url = _get_url(FORECAST_URL, lat, lng)
-    meteo_parameters = _get_data(url)[0]
-    precipitation_parameters = _get_data(url)[1]
+    meteo_parameters, precipitation_parameters = _get_data(url)
 
     current_time = datetime.now()
     current_location_time = get_current_location_time(lat, lng)[1]
@@ -283,7 +204,6 @@ def forecast_details(request, name):
     current_cloudiness = float(meteo_parameters[0][5])
 
     time_of_day = get_time_of_day(lat, lng)
-    _create_plots(meteo_parameters, precipitation_3_hours_values,precipitation_6_hours_values,)
 
     Lat = str(lat).replace(',', '.')
     Lng = str(lng).replace(',', '.')
@@ -291,37 +211,35 @@ def forecast_details(request, name):
 
     current_location_time_display_value = current_location_time_display(current_location_time)
 
+    logging.debug('precipitation_3_hours_values: %s' % precipitation_3_hours_values)
 
-    precip_6_times = []
-    for i in range(len(precipitation_6_hours_values)):
-        time = ([precipitation_6_hours_values[i][0].year,
-                precipitation_6_hours_values[i][0].month,
-                precipitation_6_hours_values[i][0].day,
-                precipitation_6_hours_values[i][0].hour,
-                precipitation_6_hours_values[i][0].minute])
-        precip_6_times.append(time)
+    # precip_6_times = []
+    # for i in range(len(precipitation_6_hours_values)):
+    #     time = ([precipitation_6_hours_values[i][0].year,
+    #             precipitation_6_hours_values[i][0].month,
+    #             precipitation_6_hours_values[i][0].day,
+    #             precipitation_6_hours_values[i][0].hour,
+    #             precipitation_6_hours_values[i][0].minute])
+    #     precip_6_times.append(time)
 
-    precip_6_values = []
-    for i in range(len(precipitation_6_hours_values)):
-        value = precipitation_6_hours_values[i][1]
-        precip_6_values.append(value)
+    # precip_6_values = []
+    # for i in range(len(precipitation_6_hours_values)):
+    #     value = precipitation_6_hours_values[i][1]
+    #     precip_6_values.append(value)
 
-    logging.debug(precip_6_times)
+    # precip_3_times = []
+    # for i in range(len(precipitation_3_hours_values)):
+    #     time = ([precipitation_3_hours_values[i][0].year,
+    #             precipitation_3_hours_values[i][0].month,
+    #             precipitation_3_hours_values[i][0].day,
+    #             precipitation_3_hours_values[i][0].hour,
+    #             precipitation_3_hours_values[i][0].minute])
+    #     precip_3_times.append(time)
 
-    precip_3_times = []
-    for i in range(len(precipitation_3_hours_values)):
-        time = ([precipitation_3_hours_values[i][0].year,
-                precipitation_3_hours_values[i][0].month,
-                precipitation_3_hours_values[i][0].day,
-                precipitation_3_hours_values[i][0].hour,
-                precipitation_3_hours_values[i][0].minute])
-        precip_3_times.append(time)
-
-    precip_3_values = []
-    for i in range(len(precipitation_3_hours_values)):
-        value = precipitation_3_hours_values[i][1]
-        precip_3_values.append(value)
-
+    # precip_3_values = []
+    # for i in range(len(precipitation_3_hours_values)):
+    #     value = precipitation_3_hours_values[i][1]
+    #     precip_3_values.append(value)
 
 
     times = [time[0] for time in meteo_parameters]
@@ -331,16 +249,13 @@ def forecast_details(request, name):
         time = times[i]
         time_tuple = ([time.month, time.day, time.year, time.hour, time.minute])
         times_tuples.append(time_tuple)
-    temp_values_str = [value[2] for value in meteo_parameters]
-    temp_values = [float(value) for value in temp_values_str]
+    temp_values = [float(value[2]) for value in meteo_parameters]
     press_values = [float(value[3]) for value in meteo_parameters]
     hum_values = [float(value[4]) for value in meteo_parameters]
-    prec_6_values = [float(value[1]) for value in precipitation_6_hours_values]
-    prec_3_values = [float(value[1]) for value in precipitation_3_hours_values]
+    # prec_6_values = [float(value[1]) for value in precipitation_6_hours_values]
+    # prec_3_values = [value[1] for value in precipitation_3_hours_values]
 
-
-
-
+    logging.debug(precipitation_3_hours_times)
     context = {
         'name': name,
         'lat': lat,
@@ -359,31 +274,21 @@ def forecast_details(request, name):
         'url': url,
         'data': meteo_parameters,
         'data1': precipitation_6_hours_values,
-        'data2': precipitation_3_hours_values,
+        'precipitation_3_hours_values': precipitation_3_hours_values,
+        'precipitation_3_hours_times': precipitation_3_hours_times,
+        'precipitation_6_hours_values': precipitation_6_hours_values,
+        'precipitation_6_hours_times': precipitation_6_hours_times,
         'len_times': len_times,
         'temperature_values': temp_values,
         'times_tuples': times_tuples,
         'pressure_values': press_values,
         'humidity_values': hum_values,
-        'precipitation_6_hours_values': prec_6_values,
-        'precipitation_3_hours_values': prec_3_values,
+        # 'precipitation_6_hours_values': prec_6_values,
+        # 'precipitation_3_hours_values': prec_3_values,
+        # 'precipitation_3_hours_times': prec_3_times,
         'times_tuple_6': times_tuple_6,
         'precipitation_parameters': precipitation_parameters,
-        'precip_6_times': precip_6_times,
-        'precip_3_times': precip_3_times,
+        # 'precip_6_times': precip_6_times,
+        # 'precip_3_times': precip_3_times,
     }
     return render(request, "forecast/details.html", context)
-
-def plots(request):
-    plot_times = []
-    for i in range(10):
-        time = datetime.now() + timedelta(hours=i) + timedelta(hours=2)
-        time_tuples = ([time.month, time.day, time.year, time.hour, time.minute])
-        plot_times.append(time_tuples)
-    plot_values = [1, 4, 1, 4, 7, 9, 7, 3, 4]
-
-    context = {
-        'times': plot_times,
-        'values': plot_values,
-    }
-    return render(request, "forecast/plot.html", context)

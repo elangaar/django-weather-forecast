@@ -33,45 +33,59 @@ $(document).ready(function() {
     var pressValues = {{ pressure_values }};
     var humValues = {{ humidity_values }};
     var precip6Values = {{ precipitation_6_hours_values }};
+
     var precip3Values = {{ precipitation_3_hours_values }};
+    var precip3Times = {{ precipitation_3_hours_times }};
+    
+    var precip6Values = {{ precipitation_6_hours_values }};
+    var precip6Times = {{ precipitation_6_hours_times }};
+
     var plotTempValues = [];
     var plotPressValues = [];
     var plotHumValues = [];
     var plotPrecip6Values = [];
     var plotPrecip3Values = [];
-    var times_6 = {{ precip_6_times }};
-    var times_3 = {{ precip_3_times }};
-
-    console.log(times_6[0]);
+    // var times_6 = {{ precip_6_times }};
+    // var times_3 = {{ precip_3_times }};
+    console.log('precip3Times: ' + precip3Times);
+    console.log('precip3Values: ' + precip3Values);
 
     for (var i = 0; i < {{ len_times }}; i++) {
         timesFlot.push(new Date( times[i][2], times[i][0],
             times[i][1], times[i][3], times[i][4] ));
     }
-    for (var i = 0; i < precip6Values.length; i++) {
-        timesFlot6Precip.push(new Date(times_6[i][0],
-                    times_6[i][1],times_6[i][2],
-                    times_6[i][3],times_6[i][4]));
-    }
-    console.log(timesFlot6Precip);
-    for (var i = 0; i < precip3Values.length; i++) {
-        timesFlot3Precip.push(new Date(times_3[i][0],
-                    times_3[i][1],times_3[i][2],
-                    times_3[i][3],times_3[i][4]));
-    }
-    for (var i = 0; i < precip3Values.length; i++) {
-        timesFlot3Precip.push(new Date(precip3Values[i][0]))
+   //  for (var i = 0; i < precip6Values.length; i++) {
+   //      timesFlot6Precip.push(new Date(times_6[i][0],
+   //                  times_6[i][1],times_6[i][2],
+   //                  times_6[i][3],times_6[i][4]));
+   //  }
+    for (var i = 0; i < precip3Times.length; i++) {
+        time = new Date(precip3Times[i][0], precip3Times[i][1],precip3Times[i][2],
+                precip3Times[i][3], precip3Times[i][4]);
 
+        plotPrecip3Values.push([time, precip3Values[i]]);
+        
+    }
+    for (var i = 0; i < precip6Times.length; i++) {
+        time = new Date(precip6Times[i][0], precip6Times[i][1],precip6Times[i][2],
+                precip6Times[i][3], precip6Times[i][4]);
+
+        plotPrecip6Values.push([time, precip6Values[i]]);
+        
     }
     for (var i = 0; i < times.length; i++) {
         plotTempValues.push([timesFlot[i], tempValues[i]]);
         plotPressValues.push([timesFlot[i], pressValues[i]]);
         plotHumValues.push([timesFlot[i], humValues[i]]);
         plotPrecip6Values.push([timesFlot6Precip[i], precip6Values[i]]);
-        plotPrecip3Values.push([timesFlot3Precip[i], precip3Values[i]]);
         
         
     }
+    console.log('plotPrecip3Values: ' + plotPrecip3Values + ' typ: ' + 
+            (Array.isArray(plotPrecip3Values))?console.log('plotPrecip3Values jest ' + 
+                'tablicą'):console.log('plotPrecip3Values jest tablicą'));
+    console.log('plotPrecip3Values: ' + plotPrecip3Values);
+    
     
     $.plot("#plot-temperature", [ plotTempValues ], {
         colors: ['#FF0000'],
@@ -232,20 +246,11 @@ $(document).ready(function() {
         </div>
         </div>
             <div class="col-md-8 text-right">
-                <img src="{% static 'forecast/plots/plot.png' %}" alt="Wykresy parametrów
-        meteo i opadów" />
                 <div id="plot-temperature" style="width:600px;height:200px"> </div>
                 <div id="plot-pressure" style="width:600px;height:200px"> </div>
                 <div id="plot-humidity" style="width:600px;height:200px"> </div>
                 <div id="plot-precipitation-6-hours"style="width:600px;height:200px"> </div>
                 <div id="plot-precipitation-3-hours" style="width:600px;height:200px"> </div>
-                <div>
-                <p> {{ times }} </p>
-                <p> {{ temperature_values }} </p>
-                <p> {{ len_times }} </p>
-                <p> {{ humidity_values }} </p>
-                </div>
-
             </div>
         </div>
     </div>
