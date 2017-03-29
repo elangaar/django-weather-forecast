@@ -8,7 +8,8 @@
 <style>
     #map {
         height: 300px;
-        width: 350px;
+        margin: auto;
+        max-width: ;
     }
     #pictograms {
         padding-top: 30px;
@@ -22,65 +23,56 @@
         margin: 0;
         padding: 0;
     }
+    .plot {
+        height: 200px;
+        margin: auto;
+        max-width: ;
+    }
 </style>
 <script>
 $(document).ready(function() {
     var timesFlot = [];
     var times = {{ times_tuples }};
-    var timesFlot6Precip = [];
-    var timesFlot3Precip = [];
     var tempValues = {{ temperature_values }};
     var pressValues = {{ pressure_values }};
     var humValues = {{ humidity_values }};
-    var precip6Values = {{ precipitation_6_hours_values }};
 
-    var precip3Values = {{ precipitation_3_hours_values }};
-    var precip3Times = {{ precipitation_3_hours_times }};
-    
-    var precip6Values = {{ precipitation_6_hours_values }};
-    var precip6Times = {{ precipitation_6_hours_times }};
+    var precip3Params = {{ precipitation_3_hours_parameters }};
+    var precip6Params = {{ precipitation_6_hours_parameters }};
+
 
     var plotTempValues = [];
     var plotPressValues = [];
     var plotHumValues = [];
     var plotPrecip6Values = [];
     var plotPrecip3Values = [];
-    // var times_6 = {{ precip_6_times }};
-    // var times_3 = {{ precip_3_times }};
-    console.log('precip3Times: ' + precip3Times);
-    console.log('precip3Values: ' + precip3Values);
 
-    for (var i = 0; i < {{ len_times }}; i++) {
+    for (var i = 0; i < times.length; i++) {
         timesFlot.push(new Date( times[i][2], times[i][0],
             times[i][1], times[i][3], times[i][4] ));
     }
-   //  for (var i = 0; i < precip6Values.length; i++) {
-   //      timesFlot6Precip.push(new Date(times_6[i][0],
-   //                  times_6[i][1],times_6[i][2],
-   //                  times_6[i][3],times_6[i][4]));
-   //  }
-    for (var i = 0; i < precip3Times.length; i++) {
-        time = new Date(precip3Times[i][0], precip3Times[i][1],precip3Times[i][2],
-                precip3Times[i][3], precip3Times[i][4]);
+    for (var i = 0; i < precip3Params.length; i++) {
+        var elem = precip3Params[i][0];
+        time = new Date(elem[0], elem[1], elem[2], elem[3], elem[4]);
 
-        plotPrecip3Values.push([time, precip3Values[i]]);
-        
+        plotPrecip3Values.push([time, precip3Params[i][1]]);
     }
-    for (var i = 0; i < precip6Times.length; i++) {
-        time = new Date(precip6Times[i][0], precip6Times[i][1],precip6Times[i][2],
-                precip6Times[i][3], precip6Times[i][4]);
+    
+    for (var i = 0; i < precip6Params.length; i++) {
+        var elem = precip6Params[i][0];
+        time = new Date(elem[0], elem[1], elem[2], elem[3], elem[4]);
 
-        plotPrecip6Values.push([time, precip6Values[i]]);
-        
+        plotPrecip6Values.push([time, precip6Params[i][1]]);
     }
+
     for (var i = 0; i < times.length; i++) {
         plotTempValues.push([timesFlot[i], tempValues[i]]);
         plotPressValues.push([timesFlot[i], pressValues[i]]);
         plotHumValues.push([timesFlot[i], humValues[i]]);
-        plotPrecip6Values.push([timesFlot6Precip[i], precip6Values[i]]);
         
         
     }
+    
     console.log('plotPrecip3Values: ' + plotPrecip3Values + ' typ: ' + 
             (Array.isArray(plotPrecip3Values))?console.log('plotPrecip3Values jest ' + 
                 'tablicą'):console.log('plotPrecip3Values jest tablicą'));
@@ -143,7 +135,7 @@ $(document).ready(function() {
         },
         points:{
             show: true,
-            radius: 3
+            radius: 0
         }, 
         series: {
             bars: {
@@ -161,7 +153,7 @@ $(document).ready(function() {
         },
         points:{
             show: true,
-            radius: 3
+            radius: 0
         }, 
         bars: {
             show: true,
@@ -245,12 +237,12 @@ $(document).ready(function() {
                     <div id="map" ></div>
         </div>
         </div>
-            <div class="col-md-8 text-right">
-                <div id="plot-temperature" style="width:600px;height:200px"> </div>
-                <div id="plot-pressure" style="width:600px;height:200px"> </div>
-                <div id="plot-humidity" style="width:600px;height:200px"> </div>
-                <div id="plot-precipitation-6-hours"style="width:600px;height:200px"> </div>
-                <div id="plot-precipitation-3-hours" style="width:600px;height:200px"> </div>
+            <div class="col-md-8 text-right plot">
+                <div class='plot' id="plot-temperature" > </div>
+                <div class='plot' id="plot-pressure" > </div>
+                <div class='plot' id="plot-humidity" > </div>
+                <div class='plot' id="plot-precipitation-6-hours"> </div>
+                <div class='plot' id="plot-precipitation-3-hours" > </div>
             </div>
         </div>
     </div>
