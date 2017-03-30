@@ -38,18 +38,30 @@ def select(request):
             if name == '':
                 messages.error(request, "Wprowadź nazwę miejscowości!")
                 return redirect(reverse('select'))
+
             return HttpResponseRedirect(
-                reverse('forecast-details', args=(name, ))
+                reverse('places', args=(name, ))
             )
     else:
         form = SelectForm()
     return render(request, "forecast/index.html", {'form':form})
 
-def _coordinates(name):
+def places(request, name):
     geolocator = Nominatim()
-    location = geolocator.geocode(name)
-    country = location[0].split(', ')[-1]
-    return (location.latitude, location.longitude, country)
+    locations = geolocator.geocode(name, exactly_one=False)
+    logging.debug(locations)
+    if locations == None:
+        messages.error(request, "Wprowadź nazwę miejscowości!")
+        return redirect(reverse('select'))
+    logging.debug('Karramba, przechodzi')
+    country = 'państwo'
+    # country = locations[0].split(', ')[-1]
+    context = {
+        'locations': locations,
+        'name': name,
+    }
+
+    return render(request, "forecast/places.html", context)
 
 def _get_url(url, lat, lng):
     return url + 'lat=%s;lon=%s' % (lat, lng)
@@ -141,29 +153,27 @@ def current_location_time_display(location_dt):
     locale.setlocale(locale.LC_TIME, "pl_PL.utf8")
     return datetime.strftime(location_dt, "%d %B %Y %H:%M")
 
-def forecast_details(request, name):
-    try:
-        location = _coordinates(name)
-    except (AttributeError, TypeError):
-        messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
-        return redirect(reverse('select'))
+def forecast_details(request, name, latitude, longitude):
+   #  try:
+   #      location = _coordinates(name)
+   #  except (AttributeError, TypeError):
+   #      messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
+   #      return redirect(reverse('select'))
 
-    lat, lng, country = location
-
-    url = _get_url(FORECAST_URL, lat, lng)
+    url = _get_url(FORECAST_URL, latitude, longitude)
     meteo_parameters = _get_data(url)
 
     current_time = datetime.now()
-    current_location_time = get_current_location_time(lat, lng)[1]
+    current_location_time = get_current_location_time(latitude, longitude)[1]
     current_temperature = meteo_parameters[0][2]
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
     current_cloudiness = float(meteo_parameters[0][5])
 
-    time_of_day = get_time_of_day(lat, lng)
+    time_of_day = get_time_of_day(latitude, longitude)
 
-    Lat = str(lat).replace(',', '.')
-    Lng = str(lng).replace(',', '.')
+    Lat = str(latitude).replace(',', '.')
+    Lng = str(longitude).replace(',', '.')
 
     current_location_time_display_value = current_location_time_display(current_location_time)
 
@@ -171,7 +181,7 @@ def forecast_details(request, name):
     times_tuples = []
     for i in range(len(times)):
         time = times[i]
-        time_tuple = ([time.month, time.day, time.year, time.hour, time.minute])
+        time_tuple = ([time.year, time.month, time.day, time.hour, time.minute])
         times_tuples.append(time_tuple)
     temp_values = [float(value[2]) for value in meteo_parameters]
     press_values = [float(value[3]) for value in meteo_parameters]
@@ -179,12 +189,12 @@ def forecast_details(request, name):
 
     context = {
         'name': name,
-        'lat': lat,
-        'lng': lng,
+        'lat': latitude,
+        'lng': longitude,
         'Lat': Lat,
         'Lng': Lng,
         'time_of_day': time_of_day,
-        'country': country,
+        # 'country': country,
         'current_time': current_time,
         'current_location_time': current_location_time_display_value,
         'current_temperature': current_temperature,

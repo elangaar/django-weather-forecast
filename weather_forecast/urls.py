@@ -21,12 +21,14 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 
-from weather_forecast.apps.forecast.views import select, forecast_details
+from weather_forecast.apps.forecast.views import select, forecast_details, places
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', select, name='select'),
-    url(r'^(?P<name>[\s\w-]+)/$', forecast_details, name='forecast-details'),
+    url(r'^(?P<name>[\s\w-]+)/$', places, name='places'),
+    url(r'^(?P<name>[\s\w-]+)/(?P<latitude>-?[0-9]{1,2}\.[0-9]+)-(?P<longitude>-?[0-9]{1,2}\.[0-9]+)/$', forecast_details, name='forecast-details'),
+
 ]
 
 if settings.DEBUG == True:

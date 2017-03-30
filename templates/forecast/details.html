@@ -48,8 +48,8 @@ $(document).ready(function() {
     var plotPrecip3Values = [];
 
     for (var i = 0; i < times.length; i++) {
-        timesFlot.push(new Date( times[i][2], times[i][0],
-            times[i][1], times[i][3], times[i][4] ));
+        timesFlot.push(new Date( times[i][0], times[i][1]-1,
+            times[i][2], times[i][3], times[i][4] ));
     }
     for (var i = 0; i < precip3Params.length; i++) {
         var elem = precip3Params[i][0];
