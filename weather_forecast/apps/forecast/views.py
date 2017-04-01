@@ -68,9 +68,6 @@ def places(request, name):
 def _get_url(url, lat, lng):
     return url + 'lat=%s;lon=%s' % (lat, lng)
 
-precipitation_3_hours_parameters = []
-precipitation_6_hours_parameters = []
-
 def _get_meteo_parameters(time_from, time_to, data):
     temperature = data['location']['temperature']['@value']
     pressure = data['location']['pressure']['@value']
@@ -78,18 +75,11 @@ def _get_meteo_parameters(time_from, time_to, data):
     cloudiness = data['location']['cloudiness']['@percent']
     return (time_from, time_to, temperature, pressure, humidity, cloudiness)
 
-def _get_precipitation_parameters(time_from, time_to, data):
-    if time_to - time_from == timedelta(hours=3):
-        precipitation_value = data['location']['precipitation']['@value']
-        time = [time_from.year, time_from.month, time_from.day, time_from.hour,
-                time_from.minute]
-        precipitation_3_hours_parameters.append([time, float(precipitation_value)])
-
-    if time_to - time_from == timedelta(hours=6):
-        precipitation_value = data['location']['precipitation']['@value']
-        time = [time_from.year, time_from.month, time_from.day, time_from.hour,
-                time_from.minute]
-        precipitation_6_hours_parameters.append([time, float(precipitation_value)])
+def _get_precipitation_parameter(time_from, time_to, data):
+    precipitation_value = data['location']['precipitation']['@value']
+    time = [time_from.year, time_from.month, time_from.day, time_from.hour,
+            time_from.minute]
+    return ([time, float(precipitation_value)])
 
 def _get_data(url):
     with urlopen(url) as file:
@@ -98,6 +88,8 @@ def _get_data(url):
 
     periodic_data = data_xml['weatherdata']['product']['time']
     meteo_parameters = []
+    precipitation_3_hours_parameters = []
+    precipitation_6_hours_parameters = []
 
     for period in periodic_data:
         time_from_raw = DATE_TIME_REGEX.match(period['@from']).group()
@@ -107,11 +99,16 @@ def _get_data(url):
         try:
             meteo_parameters.append(_get_meteo_parameters(time_from, time_to, period))
         except KeyError:
-            _get_precipitation_parameters(time_from, time_to, period)
+            if time_to - time_from == timedelta(hours=3):
+                precipitation_3_hours_parameters.append(_get_precipitation_parameter(time_from,
+                    time_to, period))
+            elif time_to - time_from == timedelta(hours=6):
+                precipitation_6_hours_parameters.append(_get_precipitation_parameter(time_from,
+                    time_to, period))
         except KeyError:
             pass
 
-    return (meteo_parameters)
+    return (meteo_parameters, precipitation_3_hours_parameters, precipitation_6_hours_parameters)
 
 def get_current_location_time(lat, lng):
     URL = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s,%s&timestamp=1458000000&key='
@@ -156,7 +153,7 @@ def current_location_time_display(location_dt):
 
 def forecast_details(request, name, country, latitude, longitude):
     url = _get_url(FORECAST_URL, latitude, longitude)
-    meteo_parameters = _get_data(url)
+    meteo_parameters, precipitation_3_hours_parameters, precipitation_6_hours_parameters = _get_data(url)
 
     current_time = datetime.now()
     current_location_time = get_current_location_time(latitude, longitude)[1]
@@ -164,7 +161,7 @@ def forecast_details(request, name, country, latitude, longitude):
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
     current_cloudiness = float(meteo_parameters[0][5])
-    current_precipitation = 'opad'
+    current_precipitation = precipitation_3_hours_parameters[0][1]
 
     time_of_day = get_time_of_day(latitude, longitude)
 
@@ -182,6 +179,7 @@ def forecast_details(request, name, country, latitude, longitude):
     temp_values = [float(value[2]) for value in meteo_parameters]
     press_values = [float(value[3]) for value in meteo_parameters]
     hum_values = [float(value[4]) for value in meteo_parameters]
+    logging.debug(precipitation_3_hours_parameters)
 
     context = {
         'name': name,
