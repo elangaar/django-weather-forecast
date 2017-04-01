@@ -49,15 +49,17 @@ def select(request):
 def places(request, name):
     geolocator = Nominatim()
     locations = geolocator.geocode(name, exactly_one=False)
-    logging.debug(locations)
     if locations == None:
         messages.error(request, "Wprowadź nazwę miejscowości!")
         return redirect(reverse('select'))
-    logging.debug('Karramba, przechodzi')
-    country = 'państwo'
-    # country = locations[0].split(', ')[-1]
+
+    country = locations[0].address
+    country = country.split(', ')[-1]
+    logging.debug(country)
+    logging.debug(type(country))
     context = {
         'locations': locations,
+        'country': country,
         'name': name,
     }
 
@@ -81,7 +83,6 @@ def _get_precipitation_parameters(time_from, time_to, data):
         precipitation_value = data['location']['precipitation']['@value']
         time = [time_from.year, time_from.month, time_from.day, time_from.hour,
                 time_from.minute]
-        logging.debug('time: %s' % time)
         precipitation_3_hours_parameters.append([time, float(precipitation_value)])
 
     if time_to - time_from == timedelta(hours=6):
@@ -153,13 +154,7 @@ def current_location_time_display(location_dt):
     locale.setlocale(locale.LC_TIME, "pl_PL.utf8")
     return datetime.strftime(location_dt, "%d %B %Y %H:%M")
 
-def forecast_details(request, name, latitude, longitude):
-   #  try:
-   #      location = _coordinates(name)
-   #  except (AttributeError, TypeError):
-   #      messages.error(request, "Wprowadź poprawną nazwę miasta/miejscowości!")
-   #      return redirect(reverse('select'))
-
+def forecast_details(request, name, country, latitude, longitude):
     url = _get_url(FORECAST_URL, latitude, longitude)
     meteo_parameters = _get_data(url)
 
@@ -169,6 +164,7 @@ def forecast_details(request, name, latitude, longitude):
     current_pressure = meteo_parameters[0][3]
     current_humidity = meteo_parameters[0][4]
     current_cloudiness = float(meteo_parameters[0][5])
+    current_precipitation = 'opad'
 
     time_of_day = get_time_of_day(latitude, longitude)
 
@@ -189,18 +185,19 @@ def forecast_details(request, name, latitude, longitude):
 
     context = {
         'name': name,
+        'country': country,
         'lat': latitude,
         'lng': longitude,
         'Lat': Lat,
         'Lng': Lng,
         'time_of_day': time_of_day,
-        # 'country': country,
         'current_time': current_time,
         'current_location_time': current_location_time_display_value,
         'current_temperature': current_temperature,
         'current_pressure': current_pressure,
         'current_humidity': current_humidity,
         'current_cloudiness': current_cloudiness,
+        'current_precipitation': current_precipitation,
         'temperature_values': temp_values,
         'times_tuples': times_tuples,
         'pressure_values': press_values,

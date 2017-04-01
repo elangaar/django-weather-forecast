@@ -27,7 +27,8 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', select, name='select'),
     url(r'^(?P<name>[\s\w-]+)/$', places, name='places'),
-    url(r'^(?P<name>[\s\w-]+)/(?P<latitude>-?[0-9]{1,2}\.[0-9]+)-(?P<longitude>-?[0-9]{1,2}\.[0-9]+)/$', forecast_details, name='forecast-details'),
+    url(r'^(?P<name>[\D]+)/(?P<country>[\D]+)/(?P<latitude>-?[0-9]{1,2}\.[0-9]+)-(?P<longitude>-?[0-9]{1,2}\.[0-9]+)/$',
+        forecast_details, name='forecast-details'),
 
 ]
 
