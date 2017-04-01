@@ -9,7 +9,6 @@
 {% block content %}
 
 <h1> Wybierz miejscowość </h1>
-{{ country }}
 {% with name=name country=country %}
 {% for i in  locations  %}
 <a href="{% url 'forecast-details' name country i.latitude i.longitude %}"> {{ i }} 
