@@ -24,9 +24,14 @@
         padding: 0;
     }
     .plot {
+        display: block;
+        width: 100%; 
         height: 200px;
         margin: auto;
-        max-width: ;
+    }
+    .graph-title {
+        text-align: center;
+        margin-top: 1.5em;
     }
 </style>
 <script>
@@ -53,14 +58,14 @@ $(document).ready(function() {
     }
     for (var i = 0; i < precip3Params.length; i++) {
         var elem = precip3Params[i][0];
-        time = new Date(elem[0], elem[1], elem[2], elem[3], elem[4]);
+        time = new Date(elem[0], elem[1]-1, elem[2], elem[3], elem[4]);
 
         plotPrecip3Values.push([time, precip3Params[i][1]]);
     }
     
     for (var i = 0; i < precip6Params.length; i++) {
         var elem = precip6Params[i][0];
-        time = new Date(elem[0], elem[1], elem[2], elem[3], elem[4]);
+        time = new Date(elem[0], elem[1]-1, elem[2], elem[3], elem[4]);
 
         plotPrecip6Values.push([time, precip6Params[i][1]]);
     }
@@ -72,13 +77,7 @@ $(document).ready(function() {
         
         
     }
-    
-    console.log('plotPrecip3Values: ' + plotPrecip3Values + ' typ: ' + 
-            (Array.isArray(plotPrecip3Values))?console.log('plotPrecip3Values jest ' + 
-                'tablicą'):console.log('plotPrecip3Values jest tablicą'));
-    console.log('plotPrecip3Values: ' + plotPrecip3Values);
-    
-    
+
     $.plot("#plot-temperature", [ plotTempValues ], {
         colors: ['#FF0000'],
         xaxis: {
@@ -183,8 +182,6 @@ $(document).ready(function() {
             <small>czas lokalny: {{ current_location_time }} </small></h4><br />
             <div class="row">
                 <div class="col-md-6">
-                    <p><b> Szerokość geogr.: </b></p>
-                    <p><b> Długość geogr.: </b></p>
                     <p><b> Temperatura:  </b></p>
                     <p><b> Ciśnienie:  </b></p>
                     <p><b> Wilgotność: </b></p>
@@ -192,8 +189,6 @@ $(document).ready(function() {
                     <p><b> Zachmurzenie:  </b></p>
                 </div>
                 <div class="col-md-6">
-                    <p> {{ lat|floatformat:2 }} </p>
-                    <p> {{ lng|floatformat:2 }} </p>
                     <p> {{ current_temperature }} &#8451;</p>
                     <p> {{ current_pressure }} hPa</p>
                     <p> {{ current_humidity }} %</p>
@@ -237,12 +232,27 @@ $(document).ready(function() {
                     <div id="map" ></div>
         </div>
         </div>
-            <div class="col-md-8 text-right plot">
+            <div class="col-md-8">
+                <div>
+                <h4 class='graph-title'> Temperatura </h4>
                 <div class='plot' id="plot-temperature" > </div>
+                </div>
+                <div>
+                <h4 class='graph-title'> Ciśnienie </h4>
                 <div class='plot' id="plot-pressure" > </div>
+                </div>
+                <div>
+                <h4 class='graph-title'> Wilgotność </h4>
                 <div class='plot' id="plot-humidity" > </div>
-                <div class='plot' id="plot-precipitation-6-hours"> </div>
+                </div>
+                <div>
+                <h4 class='graph-title'> Opad (prognoza 48-godzinna) </h4>
                 <div class='plot' id="plot-precipitation-3-hours" > </div>
+                </div>
+                <div>
+                <h4 class='graph-title'> Opad (prognoza 9-dniowa) </h4>
+                <div class='plot' id="plot-precipitation-6-hours"> </div>
+                </div>
             </div>
         </div>
     </div>

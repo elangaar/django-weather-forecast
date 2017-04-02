@@ -55,8 +55,6 @@ def places(request, name):
 
     country = locations[0].address
     country = country.split(', ')[-1]
-    logging.debug(country)
-    logging.debug(type(country))
     context = {
         'locations': locations,
         'country': country,
@@ -179,13 +177,10 @@ def forecast_details(request, name, country, latitude, longitude):
     temp_values = [float(value[2]) for value in meteo_parameters]
     press_values = [float(value[3]) for value in meteo_parameters]
     hum_values = [float(value[4]) for value in meteo_parameters]
-    logging.debug(precipitation_3_hours_parameters)
 
     context = {
         'name': name,
         'country': country,
-        'lat': latitude,
-        'lng': longitude,
         'Lat': Lat,
         'Lng': Lng,
         'time_of_day': time_of_day,
