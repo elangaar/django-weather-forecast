@@ -1,8 +1,8 @@
-#PrognozaPogody
+# PrognozaPogody #
 
 PrognozaPogody is a simple application to check weather forecast in a specific place. PrognozaPogody provides information about actual weather parameter, localization of your place and predicted temperature, atmospheric pressure, humidity and height of precipitation.
 
-##Installation in local virtual environment
+## Installation in local virtual environment ##
 Install python 3, virtualenv and git 
 ```
 $ sudo apt-get install python3 virtualenv git
@@ -36,6 +36,6 @@ Run the project starting development server (default on port 8000):
 $ python manage.py runserver
 ``` 
 
-##License
+## License ##
 
-WeatherForecast is licensed under the terms of the MIT License (see the file LICENSE).
+PrognozaPogody is licensed under the terms of the MIT License (see the file LICENSE).
