@@ -26,7 +26,7 @@ from .forms import SelectForm
 from weather_forecast.settings import BASE_DIR, TIME_ZONE
 
 
-FORECAST_URL = 'http://api.met.no/weatherapi/locationforecastlts/1.2/?'
+FORECAST_URL = 'http://api.met.no/weatherapi/locationforecastlts/1.3/?'
 DATE_TIME_REGEX = re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}')
 PLOT_PATH = os.path.join(BASE_DIR, 'static', 'forecast', 'plots')
 
